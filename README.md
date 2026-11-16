@@ -461,7 +461,7 @@ input[type="range"] {
     <p style="font-size: 0.85rem; color: #ffd1dc; margin-top: 8px;">💡 คลิกค้างแล้วลากเพื่อหมุนฉาก 3D / เลื่อนลูกกลิ้งเมาส์เพื่อซูมเข้า-ออก</p>
   </div>
 
-  <div class="glass-card">
+  <div class="glass-card" id="controlCard">
     <h2 style="font-size: 1.25rem; margin-bottom: 12px; color: #ffe5ec;">🎨 จัดช่อดอกไม้และปรับแต่งตัวละคร 3D</h2>
     <div class="controls-grid">
       <div class="control-group">
@@ -538,7 +538,7 @@ input[type="range"] {
         <div class="envelope-flap"></div>
         <div class="wax-seal">❤️</div>
       </div>
-      <p style="font-size: 0.8rem; color: #ffd1dc;">แตะที่ซองจดหมายเพื่อเปิด/ปิด และพิมพ์ข้อความในกระดาษได้ทันที</p>
+      <p style="font-size: 0.8rem; color: #ffd1dc;">แตะที่ซองจดหมายเพื่อเปิด/ปิด และอ่านข้อความความในใจ</p>
     </div>
   </div>
 
@@ -563,7 +563,7 @@ input[type="range"] {
       </div>
       <div id="youtubePlayerWrapper" style="width: 100%; margin-top: 5px;"></div>
     </div>
-    <div style="text-align: center; margin-top: 20px;">
+    <div style="text-align: center; margin-top: 20px;" id="saveButtonContainer">
       <button class="btn" onclick="saveAndCopy()">🎁 บันทึกและคัดลอกลิงก์ส่งให้แฟน</button>
     </div>
   </div>
@@ -881,10 +881,10 @@ function rebuild3DBouquet() {
     bouquetGroup.remove(bouquetGroup.children[0]);
   }
 
-  const fIdx = parseInt(document.getElementById('flowerSelect').value) || 0;
-  const rIdx = parseInt(document.getElementById('ribbonSelect').value) || 0;
-  const wIdx = parseInt(document.getElementById('bouquetSelect').value) || 0;
-  const flowerCount = parseInt(document.getElementById('flowerCountSlider').value) || 19;
+  const fIdx = parseInt(document.getElementById('flowerSelect').value, 10) || 0;
+  const rIdx = parseInt(document.getElementById('ribbonSelect').value, 10) || 0;
+  const wIdx = parseInt(document.getElementById('bouquetSelect').value, 10) || 0;
+  const flowerCount = parseInt(document.getElementById('flowerCountSlider').value, 10) || 19;
   const arrangeStyle = document.getElementById('arrangementSelect').value || 'dome';
 
   const fObj = flowerData[fIdx];
@@ -1061,7 +1061,7 @@ function rebuild3DCharacter() {
     characterGroup.remove(characterGroup.children[0]);
   }
 
-  const type = parseInt(document.getElementById('characterSelect').value) || 0;
+  const type = parseInt(document.getElementById('characterSelect').value, 10) || 0;
   const charGroup = new THREE.Group();
 
   if (type === 0) {
@@ -1106,7 +1106,6 @@ function rebuild3DCharacter() {
     const catMat = new THREE.MeshStandardMaterial({ color: 0xffd166, roughness: 0.55 });
     const creamMat = new THREE.MeshStandardMaterial({ color: 0xfff8e7, roughness: 0.6 });
     const pinkMat = new THREE.MeshStandardMaterial({ color: 0xff8fab, roughness: 0.5 });
-    const stripeMat = new THREE.MeshStandardMaterial({ color: 0xe09f3e, roughness: 0.6 });
 
     addPlushBodyLimbs(charGroup, catMat, creamMat, pinkMat);
 
@@ -1297,7 +1296,51 @@ window.onload = function() {
   populateSelect('ribbonSelect', ribbonColors.map(r => r.name));
   populateSelect('bouquetSelect', wrapStyles.map(w => w.name));
   populateSelect('effectSelect', effects);
+
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.has('f')) {
+    document.getElementById('flowerSelect').value = urlParams.get('f') || 0;
+    const cVal = urlParams.get('c') || 19;
+    document.getElementById('flowerCountSlider').value = cVal;
+    document.getElementById('flowerCountLabel').innerText = `${cVal} ดอก`;
+    document.getElementById('arrangementSelect').value = urlParams.get('a') || 'dome';
+    document.getElementById('ribbonSelect').value = urlParams.get('r') || 0;
+    document.getElementById('bouquetSelect').value = urlParams.get('w') || 0;
+    document.getElementById('characterSelect').value = urlParams.get('ch') || 0;
+    
+    if (urlParams.has('msg')) {
+      document.getElementById('characterMessageInput').value = urlParams.get('msg');
+      document.getElementById('speechBubble').innerText = urlParams.get('msg');
+    }
+    if (urlParams.has('let')) {
+      document.getElementById('loveMessage').value = urlParams.get('let');
+    }
+    if (urlParams.has('m')) {
+      const musicUrlVal = urlParams.get('m');
+      document.getElementById('musicUrl').value = musicUrlVal;
+      if (musicUrlVal) {
+        setTimeout(() => {
+          const videoId = extractYouTubeId(musicUrlVal);
+          if (videoId) {
+            document.getElementById('youtubePlayerWrapper').innerHTML = `<iframe width="100%" height="80" src="https://www.youtube.com/embed/${videoId}?autoplay=1&loop=1&playlist=${videoId}" title="YouTube music player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" style="border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.3);"></iframe>`;
+          }
+        }, 800);
+      }
+    }
+    if (urlParams.has('eff')) {
+      document.getElementById('effectSelect').value = urlParams.get('eff');
+      particleMode = parseInt(urlParams.get('eff'), 10) || 0;
+    }
+  }
+
   init3D();
+
+  if (urlParams.get('view') === '1') {
+    const controlCard = document.getElementById('controlCard');
+    if (controlCard) controlCard.style.display = 'none';
+    const saveBtnContainer = document.getElementById('saveButtonContainer');
+    if (saveBtnContainer) saveBtnContainer.style.display = 'none';
+  }
 };
 
 function populateSelect(id, list) {
@@ -1316,7 +1359,7 @@ function updateSpeechText() {
 }
 
 function updateEffect() {
-  particleMode = parseInt(document.getElementById('effectSelect').value) || 0;
+  particleMode = parseInt(document.getElementById('effectSelect').value, 10) || 0;
 }
 
 function toggleEnvelope() {
@@ -1358,9 +1401,30 @@ function playMusic() {
 }
 
 function saveAndCopy() {
-  const shareUrl = window.location.origin + window.location.pathname + "?gift=" + Math.random().toString(36).substring(2, 8);
-  if (navigator.clipboard) navigator.clipboard.writeText(shareUrl).catch(() => {});
-  showToast("✅ เซฟแล้ว! คัดลอกลิงก์เรียบร้อย");
+  const params = new URLSearchParams();
+  params.set('f', document.getElementById('flowerSelect').value);
+  params.set('c', document.getElementById('flowerCountSlider').value);
+  params.set('a', document.getElementById('arrangementSelect').value);
+  params.set('r', document.getElementById('ribbonSelect').value);
+  params.set('w', document.getElementById('bouquetSelect').value);
+  params.set('ch', document.getElementById('characterSelect').value);
+  params.set('msg', document.getElementById('characterMessageInput').value);
+  params.set('let', document.getElementById('loveMessage').value);
+  params.set('m', document.getElementById('musicUrl').value);
+  params.set('eff', document.getElementById('effectSelect').value);
+  params.set('view', '1');
+
+  const shareUrl = window.location.origin + window.location.pathname + '?' + params.toString();
+  
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(shareUrl).then(() => {
+      showToast("🎁 เซฟและคัดลอกลิงก์ส่งให้แฟนเรียบร้อย!");
+    }).catch(() => {
+      prompt("คัดลอกลิงก์นี้:", shareUrl);
+    });
+  } else {
+    prompt("คัดลอกลิงก์นี้:", shareUrl);
+  }
 }
 
 function showToast(msg) {
